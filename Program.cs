@@ -2,6 +2,10 @@
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
+using SemanticKernelPlayground.Plugins;
+using LibGit2Sharp;
+using System.Text;
+using System;
 
 var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -16,6 +20,10 @@ var builder = Kernel.CreateBuilder()
     .AddAzureOpenAIChatCompletion(modelName, endpoint, apiKey);
 
 var kernel = builder.Build();
+kernel.Plugins.AddFromObject(new DateTimePlugin(), "DateTimePlugin");
+kernel.Plugins.AddFromObject(new GitPlugin(), "GetLatestCommitsForRepository");
+var promptText = File.ReadAllText(@"D:\Работа\Zionet\SemanticKernelPlayground\Plugins\RogerPrompt.txt");
+var rogerFunc = kernel.CreateFunctionFromPrompt(promptText);
 
 var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
 
@@ -25,6 +33,8 @@ AzureOpenAIPromptExecutionSettings openAiPromptExecutionSettings = new()
 };
 
 var history = new ChatHistory();
+
+//"D:\\Работа\\Zionet\\GallerU"
 
 do
 {
@@ -38,6 +48,8 @@ do
         break;
     }
 
+    //var promptResult = await kernel.InvokeAsync(rogerFunc, new() { ["input"] = userInput });
+    //var renderedPrompt = promptResult.GetValue<string>();
     history.AddUserMessage(userInput!);
 
     var streamingResponse =
